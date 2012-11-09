@@ -1,6 +1,6 @@
 //=============================================================================
 //File Name: Main.cpp
-//Description: Unloads ni-rt/system/FRC_UserProgram.out, then reloads it and
+//Description: Unloads /ni-rt/system/FRC_UserProgram.out, then reloads it and
 //             exits
 //Author: FRC Team 3512, Spartatroniks
 //=============================================================================
@@ -10,14 +10,29 @@
 #include <loadLib.h>
 #include <unldLib.h>
 #include <taskLib.h>
-#include <fcntl.h>
+#include "NetworkCommunication/symModuleLink.h"
 
+extern "C" {
 INT32 FRC_UserProgram_StartupLibraryInit();
+}
 
 int ALFmain() {
     printf( "ALF.out started\n" );
 
-    unldByNameAndPath( "FRC_UserProgram.out" , "/ni-rt/system" , UNLD_CPLUS_XTOR_AUTO );
+    // Check for startup code already running
+    INT32 oldId = taskNameToId( "FRC_RobotTask" );
+
+    if ( oldId != ERROR ) {
+        // Find the startup code module.
+        char moduleName[256];
+        moduleNameFindBySymbolName( "FRC_UserProgram_StartupLibraryInit" , moduleName );
+        MODULE_ID startupModId = moduleFindByName( moduleName );
+
+        if ( startupModId != NULL ) {
+            // Remove the startup code.
+            printf( "%d\n" , unldByModuleId( startupModId , 0 ) );
+        }
+    }
 
     int program = open( "/ni-rt/system/FRC_UserProgram.out" , O_RDONLY , 0 );
     loadModule( program , LOAD_ALL_SYMBOLS | LOAD_CPLUS_XTOR_AUTO );
