@@ -1,0 +1,6 @@
+/usr/local/bin/powerpc-wrs-vxworks-g++     -nostdlib -r -Wl,-X -static   CMakeFiles/ALF.out.dir/Main.cpp.obj -o ALF.out_PartialImage.out    -lsupc++ -lstdc++ -lgcc
+/usr/local/powerpc-wrs-vxworks/wind_base/munch.sh powerpc-wrs-vxworks-nm ALF.out_ctdt.c ALF.out_PartialImage.out
+/usr/local/bin/powerpc-wrs-vxworks-gcc  -c ALF.out_ctdt.c -o ALF.out_ctdt.c.o   -mcpu=603 -mstrict-align  -mlongcall -nostdlib -ansi -Wall  -isystem /usr/local/powerpc-wrs-vxworks/wind_base/target/h/wrn/coreip -DCPU=PPC603 -DTOOL_FAMILY=gnu -DTOOL=gnu -D_WRS_KERNEL
+/usr/local/bin/powerpc-wrs-vxworks-g++      ALF.out_PartialImage.out ALF.out_ctdt.c.o -o ALF.out_syms.out  -nostdlib -r -Wl,-X -static -T /usr/local/powerpc-wrs-vxworks/wind_base/target/h/tool/gnu/ldscripts/link.OUT
+/usr/local/powerpc-wrs-vxworks/wind_base/strip_syms.sh powerpc-wrs-vxworks-objcopy powerpc-wrs-vxworks-nm ALF.out_syms.out ALF.out /usr/local/powerpc-wrs-vxworks/lib/libstdc++.a /usr/local/powerpc-wrs-vxworks/lib/libsupc++.a /usr/local/lib/gcc/powerpc-wrs-vxworks/4.7.2/libgcc.a
+/usr/bin/cmake -E remove ALF.out_PartialImage.out ALF.out_ctdt.c ALF.out_ctdt.c.o ALF.out_syms.out

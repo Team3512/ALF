@@ -10,7 +10,7 @@
 #include <loadLib.h>
 #include <unldLib.h>
 #include <taskLib.h>
-#include "NetworkCommunication/symModuleLink.h"
+#include <WPILib/NetworkCommunication/symModuleLink.h>
 
 extern "C" {
 INT32 FRC_UserProgram_StartupLibraryInit();

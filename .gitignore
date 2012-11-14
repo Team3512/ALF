@@ -4,5 +4,4 @@
 *.d
 *.o
 *.out
-Makefile
 ctdt.c

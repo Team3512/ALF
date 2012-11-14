@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/tav/Git/ALF/Main.cpp
+stdio.h
+-
+ioLib.h
+-
+loadLib.h
+-
+unldLib.h
+-
+taskLib.h
+-
+WPILib/NetworkCommunication/symModuleLink.h
+-
+
