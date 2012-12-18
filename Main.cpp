@@ -34,6 +34,7 @@
 #include <moduleLib.h>
 #include <sysSymTbl.h>
 #include <taskLib.h>
+#include <sysLib.h>
 #define socklen_t int
 
 /* load on startup */
@@ -48,7 +49,7 @@ rebootRobot()
     std::printf("rebooting...\n");
 
 #ifdef VxWorks
-    reboot(0);
+    reboot( BOOT_NORMAL ); // reboot cRIO normally
 #endif
 
     std::printf("...not really!\n");
@@ -72,17 +73,16 @@ reloadRobot()
     int numTasks = taskIdListGet( idList , 50 );
 
     char* name;
-    char taskNameStart[5];
-    taskNameStart[4] = '\0';
 
     // Delete any tasks with "FRC_" at the beginning of their names
     for ( int i = 0 ; i < numTasks ; i++ ) {
-        // Copy the first 4 bytes of the task's name
+        // Get the next task name
         name = taskName( idList[i] );
-        std::memcpy( taskNameStart , name , 4 );
 
-        // If they match "FRC_", delete the task b/c the robot code created it
-        if ( std::strcmp( taskNameStart , "FRC_" ) == 0 ) {
+        /* If the first four bytes of the name match "FRC_",
+         * delete the task b/c the robot code created it
+         */
+        if ( std::strncmp( name , "FRC_" , 4 ) == 0 ) {
             taskDelete( idList[i] );
         }
     }
