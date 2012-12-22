@@ -35,6 +35,8 @@
 #include <sysSymTbl.h>
 #include <taskLib.h>
 #include <sysLib.h>
+#include <time.h>
+#include <pthread.h>
 #define socklen_t int
 
 /* load on startup */
@@ -43,23 +45,72 @@ int alf_main();
 const int32_t alf_entrystatus = alf_entrypoint();
 #endif
 
-void
-rebootRobot()
+struct threadargs_t {
+    MODULE_ID moduleID;
+};
+
+void *
+unloadRobotThread( void* arg )
 {
-    std::printf("rebooting...\n");
+    struct threadargs_t *args = (struct threadargs_t *)arg;
+    std::printf( "unldTask: unloading...\n" );
 
-#ifdef VxWorks
-    reboot( BOOT_NORMAL ); // reboot cRIO normally
-#endif
+    unldByModuleId( args->moduleID , UNLD_CPLUS_XTOR_AUTO );
 
-    std::printf("...not really!\n");
+    std::printf( "unldTask: done\n" );
+
+    pthread_exit(NULL);
+
+    return NULL;
+}
+
+void
+unloadRobot(MODULE_ID module_id) {
+    pthread_t thread0;
+    pthread_t thread1;
+    pthread_attr_t attr;
+    struct threadargs_t thread0args;
+    struct threadargs_t thread1args;
+    struct timespec sleepTime;
+
+    /* set up the threadargs */
+    thread0args.moduleID = module_id;
+    thread1args.moduleID = module_id;
+
+    /* thread attributes */
+    pthread_attr_init(&attr);
+
+    /* launch the first thread */
+    pthread_create(&thread0, &attr, unloadRobotThread, (void *)&thread0args);
+
+    /* wait a bit... */
+    sleepTime.tv_sec = 0;
+    sleepTime.tv_nsec = 1000 * 1000 * 1000;
+    nanosleep( &sleepTime , NULL );
+    sleep( 1 );
+
+    /* launch the second thread */
+    pthread_create(&thread1, &attr, unloadRobotThread, (void *)&thread1args);
+
+    /* wait for them to complete */
+    pthread_join(thread0, NULL);
+    pthread_join(thread1, NULL);
 
     return;
 }
 
 void
+rebootRobot()
+{
+    reboot( BOOT_NORMAL ); // reboot cRIO normally
+}
+
+void
 reloadRobot()
 {
+    std::printf( "reloading...\n" );
+
+#if 0
     // Get the task ID of the robot code if it's already running
     INT32 oldId;
     oldId = taskNameToId("pthr1");
@@ -69,15 +120,19 @@ reloadRobot()
     }
 
     // Get a list of the first 50 tasks
-    int idList[50];
-    int numTasks = taskIdListGet( idList , 50 );
+    int idList[256];
+    int numTasks = taskIdListGet( idList , 256 );
 
     char* name;
+
+    std::printf( "numTasks=%d" , numTasks );
 
     // Delete any tasks with "FRC_" at the beginning of their names
     for ( int i = 0 ; i < numTasks ; i++ ) {
         // Get the next task name
         name = taskName( idList[i] );
+
+        std::printf( "taskName=%s\n" , name );
 
         /* If the first four bytes of the name match "FRC_",
          * delete the task b/c the robot code created it
@@ -86,29 +141,48 @@ reloadRobot()
             taskDelete( idList[i] );
         }
     }
+#endif
 
-    // Find the startup code module.
-    char moduleName[256];
-    //strcpy("FRC_UserProgram-1.out", moduleName);
-    MODULE_ID startupModId = moduleFindByName("FRC_UserProgram-1.out");
-    if ( startupModId != NULL ) {
-        std::printf( "unloading module\n" );
-        // Remove the startup code.
-        moduleDelete( startupModId );
-        unldByModuleId(startupModId, UNLD_FORCE);
+    // Find the FRC robot code module.
+    MODULE_ID frcOldCode = moduleFindByName("FRC_UserProgram.out");
+
+    if ( frcOldCode != NULL ) {
+#if 0
+        taskSpawn( "UnloadRobot", // Task name
+                101, // Priority
+                VX_FP_TASK, // Task option flag
+                0xFFFF, // Stack size
+                (FUNCPTR)unloadRobot, // Entry point
+                (int)frcOldCode , // 1st function arg
+                0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ); // Unused task args
+
+        struct timespec sleepTime;
+        sleepTime.tv_sec = 0;
+        sleepTime.tv_nsec = 100;
+        nanosleep( &sleepTime , NULL );
+
+        taskSpawn( "UnloadRobotForce", // Task name
+                101, // Priority
+                VX_FP_TASK, // Task option flag
+                0xFFFF, // Stack size
+                (FUNCPTR)unloadRobot, // Entry point
+                (int)frcOldCode , // 1st function arg
+                0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ); // Unused task args
+#endif
+        unloadRobot(frcOldCode);
     }
 
 #if 0
-    int program = open( "/ni-rt/system/FRC_UserProgram-1.out" , O_RDONLY , 0 );
-    MODULE_ID frcCodeModule = loadModule( program , LOAD_ALL_SYMBOLS | LOAD_CPLUS_XTOR_AUTO );
+    int program = open( "/ni-rt/system/FRC_UserProgram.out" , O_RDONLY , 0 );
+    MODULE_ID frcNewCode = loadModule( program , LOAD_ALL_SYMBOLS | LOAD_CPLUS_XTOR_AUTO );
     close( program );
 
-    if ( frcCodeModule != NULL ) {
-        printf( "frc module loaded\n" );
+    if ( frcNewCode != NULL ) {
+        printf( "FRC module loaded\n" );
         VOIDFUNCPTR frcFunctionPtr;
         uint8_t symbolType;
         symFindByName( sysSymTbl , "FRC_UserProgram_StartupLibraryInit" , (char**)&frcFunctionPtr , &symbolType );
-        printf( "reloading...\n" );
+        printf( "starting robot code\n" );
         frcFunctionPtr();
     }
     else {
