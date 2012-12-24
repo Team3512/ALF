@@ -1,128 +1,33 @@
 //=============================================================================
 //File Name: Main.cpp
-//Description: Unloads /ni-rt/system/FRC_UserProgram.out, then reloads it and
-//             exits
+//Description: Accepts commands that manipulate the FRC robot code module
 //Author: FRC Team 3512, Spartatroniks
 //=============================================================================
 
+/* Supports the following commands via Telnet:
+ * 1. reboot (reboots the cRIO)
+ * 2. reload (unloads /c/ni-rt/system/FRC_UserProgram.out then reloads it)
+ * 3. listTasks (lists all task IDs and their corresponding names for the tasks
+ *    which are running on the system)
+ */
+
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
-#include <hostLib.h>
-#include <ioLib.h>
-#include <sockLib.h>
 #include <signal.h>
-#include <selectLib.h>
-#include <rebootLib.h>
-#include <loadLib.h>
-#include <unldLib.h>
-#include <moduleLib.h>
-#include <sysSymTbl.h>
-#include <taskLib.h>
-#include <sysLib.h>
-#include <time.h>
-#include <pthread.h>
+#include <arch/ppc/coprocPpc.h>
+#include <sockLib.h>
+#include <in.h>
 #define socklen_t int
+
+#include "Commands.hpp"
 
 // Load on startup
 int alf_entrypoint();
 int alf_main();
 const int32_t alf_entrystatus = alf_entrypoint();
 
-struct threadargs_t {
-    MODULE_ID moduleID;
-};
-
-void *
-unloadRobotThread( void* arg )
-{
-    struct threadargs_t *args = (struct threadargs_t *)arg;
-    std::printf( "unldTask: unloading...\n" );
-
-    unldByModuleId( args->moduleID , UNLD_CPLUS_XTOR_AUTO );
-
-    std::printf( "unldTask: done\n" );
-
-    pthread_exit(NULL);
-
-    return NULL;
-}
-
-void
-unloadRobot(MODULE_ID module_id) {
-    pthread_t thread0;
-    pthread_attr_t attr;
-    struct threadargs_t thread0args;
-
-    /* set up the threadargs */
-    thread0args.moduleID = module_id;
-
-    /* thread attributes */
-    pthread_attr_init(&attr);
-
-    /* launch the first thread */
-    pthread_create(&thread0, &attr, unloadRobotThread, (void *)&thread0args);
-
-    /* wait for it to complete */
-    pthread_join( thread0 , NULL );
-}
-
-void
-printTasks()
-{
-    int idList[256];
-
-    int numTasks = taskIdListGet( idList , 256 );
-
-    std::printf( "Task ID : Name\n" );
-    for ( int i = 0 ; i < numTasks ; i++ ) {
-        std::printf( "%d: %s\n" , idList[i] , taskName( idList[i] ) );
-    }
-}
-
-void
-rebootRobot()
-{
-    reboot( BOOT_NORMAL ); // reboot cRIO normally
-}
-
-void
-reloadRobot()
-{
-    std::printf( "Reloading...\n" );
-
-    // Delete robot code's task
-    int frcCodeTask = taskNameToId( "FRC_RobotTask" );
-    if ( frcCodeTask != ERROR ) {
-        taskDelete( frcCodeTask );
-    }
-
-    // Find FRC robot code module
-    MODULE_ID frcOldCode = moduleFindByName( "FRC_UserProgram.out" );
-
-    if ( frcOldCode != NULL ) {
-        unloadRobot( frcOldCode );
-    }
-
-    int program = open( "/ni-rt/system/FRC_UserProgram.out" , O_RDONLY , 0 );
-    MODULE_ID frcNewCode = loadModule( program , LOAD_ALL_SYMBOLS | LOAD_CPLUS_XTOR_AUTO );
-    close( program );
-
-    if ( frcNewCode != NULL ) {
-        printf( "FRC module loaded\n" );
-        VOIDFUNCPTR frcFunctionPtr;
-        uint8_t symbolType;
-        symFindByName( sysSymTbl , "FRC_UserProgram_StartupLibraryInit" , (char**)&frcFunctionPtr , &symbolType );
-        printf( "Starting robot code\n" );
-        frcFunctionPtr();
-    }
-    else {
-        std::printf( "...not really!\n" );
-    }
-}
-
 int
-procCommands(int sockfd)
+processCommands( int sockfd )
 {
     char buf[1024];
     char *cbuf;
@@ -141,6 +46,9 @@ procCommands(int sockfd)
     }
     else if( std::strcmp( buf , "reload" ) == 0 ) {
         reloadRobot();
+    }
+    else if ( std::strcmp( buf , "listTasks" ) == 0 ) {
+        listTasks();
     }
 
     return 0;
@@ -168,27 +76,25 @@ alf_main()
     struct sockaddr_in serv_addr, cli_addr;
 
     // Gives user time to kill ALF if necessary
-    std::printf( "Delaying ALF startup 5 seconds\n" );
+    std::printf( "ALF will start in 5 seconds...\n" );
     sleep( 5 );
-    std::printf( "Starting ALF...\n" );
+    std::printf( "ALF started\n" );
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    sockfd = socket( AF_INET , SOCK_STREAM , 0 );
+    bzero( (char*)&serv_addr , sizeof(serv_addr));
     portno = 3512;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
-    bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
-    listen(sockfd,5);
+    bind( sockfd , (struct sockaddr*)&serv_addr , sizeof(serv_addr) );
+    listen( sockfd , 5 );
     clilen = sizeof(cli_addr);
-    signal(SIGPIPE, SIG_IGN);
-
+    signal( SIGPIPE , SIG_IGN );
 
     while( 1 ) {
         // Accept commands from elsewhere as string and process them
-        nsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,
-            &clilen);
-        while( procCommands(nsockfd) == 0 );
+        nsockfd = accept( sockfd , (struct sockaddr*)&cli_addr , &clilen );
+        while ( processCommands( nsockfd ) == 0 );
     }
 
     return 0;
