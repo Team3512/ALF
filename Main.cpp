@@ -20,6 +20,7 @@
 #define socklen_t int
 
 #include "Commands.hpp"
+#include "Settings.hpp"
 
 // Load on startup
 int alf_entrypoint();
@@ -74,6 +75,7 @@ alf_main()
     int portno;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
+    Settings settings( "/ni-rt/system/ALFSettings.txt" );
 
     // Gives user time to kill ALF if necessary
     std::printf( "ALF will start in 5 seconds...\n" );
@@ -82,7 +84,7 @@ alf_main()
 
     sockfd = socket( AF_INET , SOCK_STREAM , 0 );
     bzero( (char*)&serv_addr , sizeof(serv_addr));
-    portno = 3512;
+    portno = atoi( settings.getValueFor( "ALF_Port" ).c_str() );
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
