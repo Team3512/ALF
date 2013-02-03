@@ -7,7 +7,6 @@ include_directories( "${WIND_BASE}/target/h/WPILib" )
 set(SRC
     Main.cpp
     Commands.cpp
-    Helpers.cpp
 )
 
 add_executable(ALF.out ${SRC})

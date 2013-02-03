@@ -5,20 +5,37 @@
 //=============================================================================
 
 #include "Commands.hpp"
-#include "Helpers.hpp"
 
 #include <cstdio>
+#include <cstring>
+
+// Used for opening files in VxWorks
 #include <ioLib.h>
+
+// Defines MODULE_ID typedef
 #include <moduleLib.h>
+
+// Used for loading modules
 #include <loadLib.h>
+
+// Used for unloading modules
+#include <unldLib.h>
+
+// Provides functions for manipulating tasks
 #include <taskLib.h>
+
+// Defines reboot(1) function
 #include <rebootLib.h>
+
+// Defines BOOT_NORMAL flag
 #include <sysLib.h>
-#include <symLib.h>
+
+// Provides access to global symbol table and manipulation functions
 #include <sysSymTbl.h>
 
 void rebootRobot() {
-    reboot( BOOT_NORMAL ); // reboot cRIO normally
+    // reboot cRIO normally
+    reboot( BOOT_NORMAL );
 }
 
 void reloadRobot() {
@@ -30,27 +47,61 @@ void reloadRobot() {
         taskDelete( frcCodeTask );
     }
 
+    // Wait for the main robot task to exit
+    while ( taskIdVerify(frcCodeTask) == OK ) {
+        sleep( 1 ); // Waits one second
+    }
+
+    // Get a list of the first 256 tasks
+    int idList[256];
+    int numTasks = taskIdListGet( idList , 256 );
+
+    char* name;
+
+    // Delete any tasks with "FRC_" at the beginning of their names
+    for ( int i = 0 ; i < numTasks ; i++ ) {
+        // Get the next task name
+        name = taskName( idList[i] );
+
+        /* If the first four bytes of the name match "FRC_",
+         * delete the task b/c the robot code created it
+         */
+        if ( std::strncmp( name , "FRC_" , 4 ) == 0 ) {
+            taskDelete( idList[i] );
+        }
+    }
+
     // Find FRC robot code module
     MODULE_ID frcOldCode = moduleFindByName( "FRC_UserProgram.out" );
 
+    // If FRC robot code was found, unload it
     if ( frcOldCode != NULL ) {
-        unloadCode( frcOldCode );
+        std::printf( "Unloading robot code module..." );
+        unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_AUTO );
+        std::printf( "Robot code module unloaded\n" );
+    }
+    else {
+        std::printf( "Robot code module wasn't loaded\n" );
     }
 
+    // Load the new FRC code module
     int program = open( "/ni-rt/system/FRC_UserProgram.out" , O_RDONLY , 0 );
     MODULE_ID frcNewCode = loadModule( program , LOAD_ALL_SYMBOLS | LOAD_CPLUS_XTOR_AUTO );
     close( program );
 
+    // If the FRC code module loaded correctly, call its entry point
     if ( frcNewCode != NULL ) {
-        printf( "FRC module loaded\n" );
+        printf( "Robot code module loaded\n" );
+
         VOIDFUNCPTR frcFunctionPtr;
         uint8_t symbolType;
+
         symFindByName( sysSymTbl , "FRC_UserProgram_StartupLibraryInit" , (char**)&frcFunctionPtr , &symbolType );
-        printf( "Starting robot code\n" );
+        std::printf( "Starting robot code...\n" );
         frcFunctionPtr();
     }
     else {
-        std::printf( "...not really!\n" );
+        std::printf( "Robot code failed to load!\n" );
     }
 }
 
