@@ -60,7 +60,8 @@ int processCommands( int sockfd ) {
 }
 
 int alf_entrypoint() {
-    taskSpawn( "ALF", // Task name
+    char strTaskName[] = "ALF";
+    taskSpawn( strTaskName, // Task name
             101, // Priority
             VX_FP_TASK, // Task option flag
             0xFFFF, // Stack size

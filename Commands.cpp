@@ -42,7 +42,8 @@ void reloadRobot() {
     std::printf( "Reloading...\n" );
 
     // Delete robot code's task
-    int frcCodeTask = taskNameToId( "FRC_RobotTask" );
+    char strTaskName[] = "FRC_RobotTask";
+    int frcCodeTask = taskNameToId( strTaskName );
     if ( frcCodeTask != ERROR ) {
         taskDelete( frcCodeTask );
     }
@@ -72,7 +73,8 @@ void reloadRobot() {
     }
 
     // Find FRC robot code module
-    MODULE_ID frcOldCode = moduleFindByName( "FRC_UserProgram.out" );
+    char strPrgmName[] = "FRC_UserProgram.out";
+    MODULE_ID frcOldCode = moduleFindByName( strPrgmName );
 
     // If FRC robot code was found, unload it
     if ( frcOldCode != NULL ) {
@@ -96,7 +98,8 @@ void reloadRobot() {
         VOIDFUNCPTR frcFunctionPtr;
         uint8_t symbolType;
 
-        symFindByName( sysSymTbl , "FRC_UserProgram_StartupLibraryInit" , (char**)&frcFunctionPtr , &symbolType );
+        char strEntryPointName[] = "FRC_UserProgram_StartupLibraryInit";
+        symFindByName( sysSymTbl , strEntryPointName , (char**)&frcFunctionPtr , &symbolType );
         std::printf( "Starting robot code...\n" );
         frcFunctionPtr();
     }
