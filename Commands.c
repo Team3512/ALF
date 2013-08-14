@@ -75,7 +75,7 @@ void reloadRobot() {
         MODULE_ID frcOldCode = NULL;
 #if 0
         char moduleName[] = "FRC_UserProgram.out";
-        MODULE_ID frcOldCode = moduleFindByName( moduleName );
+        frcOldCode = moduleFindByName( moduleName );
 #else
         char symbolName[] = "FRC_UserProgram_StartupLibraryInit";
         frcOldCode = moduleFindBySymbolName( symbolName );
