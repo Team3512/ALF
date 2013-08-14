@@ -23,7 +23,7 @@ const int gPortNumber = 3512;
 #include <in.h>
 #define socklen_t int
 
-#include "Commands.hpp"
+#include "Commands.h"
 
 // Load on startup
 int alf_entrypoint();
@@ -32,7 +32,7 @@ const int32_t alf_entrystatus = alf_entrypoint();
 
 // Process input from socket
 int processCommands( int sockfd ) {
-    char buf[1024];
+    char buf[1024] = {};
     char *cbuf;
 
     // Receive string from client
