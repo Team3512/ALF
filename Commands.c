@@ -67,33 +67,23 @@ void rebootRobot() {
 void reloadRobot() {
     printf( "Reloading...\n" );
 
-    /* Check for FRC robot code already running */
-    char taskName[] = "FRC_RobotTask";
-    INT32 frcOldTask = taskNameToId( taskName );
-    if ( frcOldTask != ERROR ) {
-        /* Find FRC robot code module */
-        MODULE_ID frcOldCode = NULL;
-#if 0
-        char moduleName[] = "FRC_UserProgram.out";
-        frcOldCode = moduleFindByName( moduleName );
-#else
-        char symbolName[] = "FRC_UserProgram_StartupLibraryInit";
-        frcOldCode = moduleFindBySymbolName( symbolName );
-#endif
+    /* Find FRC robot code module */
+    char symbolName[] = "FRC_UserProgram_StartupLibraryInit";
+    MODULE_ID frcOldCode = moduleFindBySymbolName( symbolName );
 
-        /* If FRC robot code was found, unload it */
-        if ( frcOldCode != NULL ) {
-            printf( "Unloading robot code module..." );
-            /*unldByModuleId( frcOldCode , 0 ); TODO Try me*/
-            unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_AUTO );
-            printf( "Robot code module unloaded\n" );
-        }
-        else {
-            printf( "Robot code module not found\n" );
-        }
+    /* If FRC robot code was found, unload it */
+    if ( frcOldCode != NULL ) {
+        printf( "Unloading robot code module...\n" );
+        //unldByModuleId( frcOldCode , 0 );
+        unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_AUTO );
+        printf( "Robot code module unloaded\n" );
+    }
+    else {
+        printf( "Robot code module not found\n" );
     }
 
     /* Load the new FRC code module */
+    printf( "Reloading robot code module...\n" );
     int program = open( "/ni-rt/system/FRC_UserProgram.out" , O_RDONLY , 0 );
     MODULE_ID frcNewCode = loadModule( program , LOAD_ALL_SYMBOLS | LOAD_CPLUS_XTOR_AUTO );
     close( program );
