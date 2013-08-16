@@ -74,7 +74,6 @@ void reloadRobot() {
     /* If FRC robot code was found, unload it */
     if ( frcOldCode != NULL ) {
         printf( "Unloading robot code module...\n" );
-        //unldByModuleId( frcOldCode , 0 );
         unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_AUTO );
         printf( "Robot code module unloaded\n" );
     }
