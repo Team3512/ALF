@@ -81,23 +81,26 @@ void reloadRobot() {
         printf( "Robot code module not found\n" );
     }
 
-    /* Load the new FRC code module */
+    /* Load the new FRC robot code module */
     printf( "Reloading robot code module...\n" );
     int program = open( "/ni-rt/system/FRC_UserProgram.out" , O_RDONLY , 0 );
     MODULE_ID frcNewCode = loadModule( program , LOAD_ALL_SYMBOLS | LOAD_CPLUS_XTOR_AUTO );
     close( program );
 
-    /* If the FRC code module loaded correctly, call its entry point */
+    /* If the FRC robot code module loaded correctly, call its entry point */
     if ( frcNewCode != NULL ) {
         printf( "Robot code module loaded\n" );
 
-        VOIDFUNCPTR frcFunctionPtr;
+        char* frcFuncPos;
         uint8_t symbolType;
 
+        /* Find symbol representing FRC robot code entry point */
         char strEntryPointName[] = "FRC_UserProgram_StartupLibraryInit";
-        symFindByName( sysSymTbl , strEntryPointName , (char**)&frcFunctionPtr , &symbolType );
+        symFindByName( sysSymTbl , strEntryPointName , &frcFuncPos , &symbolType );
+
+        /* Call entry point */
         printf( "Starting robot code...\n" );
-        frcFunctionPtr();
+        ((FUNCPTR)frcFuncPos)();
     }
     else {
         printf( "Robot code module failed to load\n" );
