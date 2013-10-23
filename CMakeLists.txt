@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(ALF)
+set(NAME "ALF")
+
+project(${NAME})
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall -s -std=c++11")
 set(CMAKE_C_FLAGS "-O3 -Wall -s -std=c11")
@@ -14,4 +16,4 @@ foreach(ELEM ${DIRS})
     list(APPEND SRC ${FILES})
 endforeach(ELEM)
 
-add_executable(ALF.out ${SRC})
+add_executable(${NAME}.out ${SRC})
