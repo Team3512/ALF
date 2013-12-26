@@ -26,6 +26,9 @@ Author: FRC Team 3512, Spartatroniks
 /* Used for unloading modules */
 #include <unldLib.h>
 
+/* Used for calling static destructors */
+#include <cplusLib.h>
+
 /* Provides functions for manipulating tasks */
 #include <taskLib.h>
 
@@ -72,10 +75,21 @@ void reloadRobot() {
     MODULE_ID frcOldCode = moduleFindBySymbolName( symbolName );
 
     /* If FRC robot code was found, unload it */
+    STATUS moduleUnld = ERROR;
     if ( frcOldCode != NULL ) {
+        printf( "Calling static destructors...\n" );
+        char moduleName[] = "FRC_UserProgram.out";
+        cplusDtors( moduleName );
+
         printf( "Unloading robot code module...\n" );
-        unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_AUTO );
-        printf( "Robot code module unloaded\n" );
+        moduleUnld = unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_MANUAL );
+        if ( moduleUnld == OK ) {
+            printf( "Robot code module unloaded\n" );
+        }
+        else {
+            printf( "Robot code module failed to unload\n" );
+            return;
+        }
     }
     else {
         printf( "Robot code module not found\n" );
