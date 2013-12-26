@@ -11,9 +11,9 @@ Author: FRC Team 3512, Spartatroniks
 extern "C" {
 #endif
 
-void rebootRobot();
-void reloadRobot();
-void listTasks();
+void alf_reboot();
+void alf_reload();
+void alf_listTasks();
 
 #ifdef __cplusplus
 }

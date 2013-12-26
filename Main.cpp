@@ -47,13 +47,13 @@ int processCommands( int sockfd ) {
 
     // Match the string with valid commands
     if( std::strcmp( buf , "reboot" ) == 0 ) {
-        rebootRobot();
+        alf_reboot();
     }
     else if( std::strcmp( buf , "reload" ) == 0 ) {
-        reloadRobot();
+        alf_reload();
     }
     else if ( std::strcmp( buf , "listTasks" ) == 0 ) {
-        listTasks();
+        alf_listTasks();
     }
 
     return 0;

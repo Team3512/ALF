@@ -42,7 +42,7 @@ Author: FRC Team 3512, Spartatroniks
 #include <sysSymTbl.h>
 
 /* Note: for internal use only */
-MODULE_ID moduleFindBySymbolName( char* symbolName ) {
+MODULE_ID alf_moduleFindBySymbolName( char* symbolName ) {
     SYMBOL* sym = NULL;
 
     /* When 'name' is passed, the 'value', 'type', and 'mask' are ignored */
@@ -62,17 +62,17 @@ MODULE_ID moduleFindBySymbolName( char* symbolName ) {
     }
 }
 
-void rebootRobot() {
+void alf_reboot() {
     /* reboot cRIO normally */
     reboot( BOOT_NORMAL );
 }
 
-void reloadRobot() {
+void alf_reload() {
     printf( "Reloading...\n" );
 
     /* Find FRC robot code module */
     char symbolName[] = "FRC_UserProgram_StartupLibraryInit";
-    MODULE_ID frcOldCode = moduleFindBySymbolName( symbolName );
+    MODULE_ID frcOldCode = alf_moduleFindBySymbolName( symbolName );
 
     /* If FRC robot code was found, unload it */
     STATUS moduleUnld = ERROR;
@@ -121,7 +121,7 @@ void reloadRobot() {
     }
 }
 
-void listTasks() {
+void alf_listTasks() {
     int idList[256];
 
     int numTasks = taskIdListGet( idList , 256 );
