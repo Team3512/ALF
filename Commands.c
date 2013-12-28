@@ -7,6 +7,7 @@ Author: FRC Team 3512, Spartatroniks
 #include "Commands.h"
 
 #include <stdio.h>
+#include <string.h>
 
 /* Used for opening files in VxWorks */
 #include <ioLib.h>
@@ -67,7 +68,7 @@ void alf_reboot() {
     reboot( BOOT_NORMAL );
 }
 
-void alf_reload() {
+void alf_reload( const char* newModName ) {
     printf( "Reloading...\n" );
 
     /* Find FRC robot code module */
@@ -78,8 +79,7 @@ void alf_reload() {
     STATUS moduleUnld = ERROR;
     if ( frcOldCode != NULL ) {
         printf( "Calling static destructors...\n" );
-        char moduleName[] = "FRC_UserProgram.out";
-        cplusDtors( moduleName );
+        cplusDtors( frcOldCode->name );
 
         printf( "Unloading robot code module...\n" );
         moduleUnld = unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_MANUAL );
@@ -97,7 +97,9 @@ void alf_reload() {
 
     /* Load the new FRC robot code module */
     printf( "Reloading robot code module...\n" );
-    int program = open( "/ni-rt/system/FRC_UserProgram.out" , O_RDONLY , 0 );
+    char modPath[PATH_MAX+NAME_MAX] = "/ni-rt/system/";
+    strcpy( modPath + 14 , newModName );
+    int program = open( modPath , O_RDONLY , 0 );
     MODULE_ID frcNewCode = loadModule( program , LOAD_ALL_SYMBOLS | LOAD_CPLUS_XTOR_AUTO );
     close( program );
 

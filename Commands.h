@@ -12,8 +12,10 @@ extern "C" {
 #endif
 
 void alf_reboot();
-void alf_reload();
+void alf_reload( const char* newModName );
 void alf_listTasks();
+
+void alf_copy( const char* fromName , const char* toName );
 
 #ifdef __cplusplus
 }

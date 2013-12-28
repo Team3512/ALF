@@ -49,8 +49,14 @@ int processCommands( int sockfd ) {
     if( std::strcmp( buf , "reboot" ) == 0 ) {
         alf_reboot();
     }
-    else if( std::strcmp( buf , "reload" ) == 0 ) {
-        alf_reload();
+    else if ( std::strcmp( buf , "reload" ) == 0 ) {
+        alf_reload( "FRC_UserProgram.out" );
+    }
+    else if ( std::strcmp( buf , "save" ) == 0 ) {
+        alf_copy( "/ni-rt/system/FRC_UserProgram.out" , "/ni-rt/system/FRC_SafeProgram.out" );
+    }
+    else if ( std::strcmp( buf , "fallback" ) == 0 ) {
+        alf_reload( "FRC_SafeProgram.out" );
     }
     else if ( std::strcmp( buf , "listTasks" ) == 0 ) {
         alf_listTasks();
