@@ -14,8 +14,10 @@
 // Port on which ALF waits for commands
 const int gPortNumber = 3512;
 
-#include <cstdio>
 #include <cstring>
+
+// For STATUS typedef
+#include <types/vxTypesOld.h>
 
 #include <signal.h>
 #include <arch/ppc/coprocPpc.h>
@@ -82,11 +84,6 @@ int alf_main() {
     int portno;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
-
-    // Gives user time to kill ALF if necessary
-    std::printf( "ALF will start in 5 seconds...\n" );
-    sleep( 5 );
-    std::printf( "ALF started\n" );
 
     sockfd = socket( AF_INET , SOCK_STREAM , 0 );
     bzero( (char*)&serv_addr , sizeof(serv_addr));
