@@ -76,13 +76,13 @@ void alf_reload( const char* newModName ) {
     MODULE_ID frcOldCode = alf_moduleFindBySymbolName( symbolName );
 
     /* If FRC robot code was found, unload it */
-    STATUS moduleUnld = ERROR;
     if ( frcOldCode != NULL ) {
         printf( "Calling static destructors...\n" );
         cplusDtors( frcOldCode->name );
 
         printf( "Unloading robot code module...\n" );
-        moduleUnld = unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_MANUAL );
+        STATUS moduleUnld = unldByModuleId( frcOldCode , UNLD_CPLUS_XTOR_MANUAL );
+
         if ( moduleUnld == OK ) {
             printf( "Robot code module unloaded\n" );
         }
@@ -112,11 +112,16 @@ void alf_reload( const char* newModName ) {
 
         /* Find symbol representing FRC robot code entry point */
         char strEntryPointName[] = "FRC_UserProgram_StartupLibraryInit";
-        symFindByName( sysSymTbl , strEntryPointName , &frcFuncPos , &symbolType );
+        STATUS foundSym = symFindByName( sysSymTbl , strEntryPointName , &frcFuncPos , &symbolType );
 
-        /* Call entry point */
-        printf( "Starting robot code...\n" );
-        ((FUNCPTR)frcFuncPos)();
+        if ( foundSym == OK ) {
+            /* Call entry point */
+            printf( "Starting robot code...\n" );
+            ((FUNCPTR)frcFuncPos)();
+        }
+        else {
+            printf( "Robot code entry point not found\n" );
+        }
     }
     else {
         printf( "Robot code module failed to load\n" );
