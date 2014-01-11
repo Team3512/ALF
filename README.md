@@ -1,6 +1,6 @@
 # ALF - Application Loading Framework
 
-The Application Loading Framework (ALF) provides us with a means to remotely reboot the cRIO and reload our robot code's kernel module without having to use anything 
+The Application Loading Framework (ALF) provides us with a means to remotely reboot the cRIO as well as reload our robot code's kernel module without having to reboot the cRIO. Being able to update the currently running C++ code without waiting for the cRIO to reboot drastically speeds up our development cycle and increases our productivity.
 
 
 ## Dependencies
@@ -14,7 +14,7 @@ Follow these steps to get ALF running on your FIRST FRC cRIO controller.
 
 ### Compile the Software
 
-This software has been tested using both the FIRST FRC Wind River Workbench (GCC 3.4.4 for powerpc-wrs-vxworks) toolchain and the new [GCC 4.8.2 toolchain for powerpc-wrs-vxworks](http://firstforge.wpi.edu/sf/projects/c--11_toochain). Makefiles for the latter are included in the project. The project can be built by importing the project's folder into a workspace and selecting "Build Project" from the "Project" menu.
+This software has been tested using both the FIRST FRC Wind River Workbench (GCC 3.4.4 for powerpc-wrs-vxworks) toolchain and the new [GCC 4.8.2 toolchain for powerpc-wrs-vxworks](http://firstforge.wpi.edu/sf/projects/c--11_toochain). Makefiles for the latter are included in the project. The project can be built in Wind River by importing the project's folder into a workspace and selecting "Build Project" from the "Project" drop-down menu.
 
 ### Upload the Binary
 
@@ -43,7 +43,7 @@ ALF should begin running at the system's next restart.
 
 ## Usage
 
-To call commands from ALF, one can connect to the robot using any Telnet client, such as [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html). The following commands are supported:
+To call commands from ALF, one can connect to the robot on port 3512 using any Telnet client, such as [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html). The following commands are supported:
 
     1) reboot
         * Reboots the cRIO
