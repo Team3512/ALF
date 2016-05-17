@@ -56,3 +56,4 @@ To call commands from ALF, one can connect to the robot on port 3512 using any T
     5) listTasks
         * Lists the tasks currently running on the cRIO with some extra information
 
+To use the backspace key for deleting characters in the Telnet console instead of Control-H, run `tyBackspaceSet(127)`.
